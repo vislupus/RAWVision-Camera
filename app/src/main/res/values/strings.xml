@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">RAWVision Camera</string>
+
+    <!-- Navigation -->
+    <string name="nav_camera">Camera</string>
+    <string name="nav_gallery">Gallery</string>
+    <string name="nav_editor">Editor</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Generic actions -->
+    <string name="action_back">Back</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_export">Export</string>
+    <string name="action_favorite">Favourite</string>
+    <string name="action_redo">Redo</string>
+    <string name="action_reset">Reset</string>
+    <string name="action_restore">Restore</string>
+    <string name="action_save">Save</string>
+    <string name="action_share">Share</string>
+    <string name="action_undo">Undo</string>
+
+    <!-- Permissions -->
+    <string name="permission_camera_title">Camera access needed</string>
+    <string name="permission_camera_body">RAWVision needs the camera to take photos. Location is optional and is only used to geotag your pictures.</string>
+    <string name="permission_grant">Allow</string>
+
+    <!-- Camera -->
+    <string name="camera_auto">AUTO</string>
+    <string name="camera_shutter">Shutter</string>
+    <string name="camera_focus">Focus</string>
+    <string name="camera_exposure_comp">Exposure compensation</string>
+    <string name="camera_flash">Flash</string>
+    <string name="camera_timer">Timer</string>
+    <string name="camera_grid">Grid</string>
+    <string name="camera_switch">Switch camera</string>
+    <string name="camera_location_on">Location on</string>
+    <string name="camera_macro">Macro</string>
+    <string name="camera_no_raw">RAW not supported by this lens</string>
+    <string name="camera_none">No camera available</string>
+    <string name="camera_saved">Saved</string>
+
+    <!-- White balance -->
+    <string name="wb_auto">Auto</string>
+    <string name="wb_incandescent">Tungsten</string>
+    <string name="wb_fluorescent">Fluorescent</string>
+    <string name="wb_daylight">Daylight</string>
+    <string name="wb_cloudy">Cloudy</string>
+    <string name="wb_shade">Shade</string>
+    <string name="wb_manual">Kelvin</string>
+
+    <!-- Editor -->
+    <string name="editor_tab_light">Light</string>
+    <string name="editor_tab_color">Colour</string>
+    <string name="editor_tab_detail">Detail</string>
+    <string name="editor_tab_effects">Effects</string>
+    <string name="editor_tab_geometry">Crop</string>
+    <string name="editor_original">Original</string>
+    <string name="editor_history">History</string>
+    <string name="editor_history_hint">Every version is kept. Restore any of them or go back to the untouched original at any time.</string>
+    <string name="editor_history_empty">No earlier versions yet.</string>
+    <string name="editor_save_version">Save version</string>
+    <string name="editor_reset_all">Reset all edits</string>
+    <string name="editor_reset_confirm">All adjustments will be cleared. The original file is never changed and the previous recipe stays in the history.</string>
+    <string name="editor_saved">Version saved</string>
+    <string name="editor_exported">Exported</string>
+
+    <string name="edit_exposure">Exposure</string>
+    <string name="edit_contrast">Contrast</string>
+    <string name="edit_highlights">Highlights</string>
+    <string name="edit_shadows">Shadows</string>
+    <string name="edit_whites">Whites</string>
+    <string name="edit_blacks">Blacks</string>
+    <string name="edit_temperature">Temperature</string>
+    <string name="edit_tint">Tint</string>
+    <string name="edit_saturation">Saturation</string>
+    <string name="edit_vibrance">Vibrance</string>
+    <string name="edit_sharpness">Sharpness</string>
+    <string name="edit_clarity">Clarity</string>
+    <string name="edit_dehaze">Dehaze</string>
+    <string name="edit_vignette">Vignette</string>
+    <string name="edit_straighten">Straighten</string>
+    <string name="edit_crop">Crop</string>
+    <string name="edit_crop_free">Free</string>
+    <string name="edit_rotate_left">Rotate left</string>
+    <string name="edit_rotate_right">Rotate right</string>
+    <string name="edit_flip_h">Flip horizontally</string>
+    <string name="edit_flip_v">Flip vertically</string>
+
+    <!-- Gallery -->
+    <string name="gallery_empty_title">No photos yet</string>
+    <string name="gallery_empty_body">Everything you capture is stored inside the app and will appear here.</string>
+    <string name="gallery_take_photo">Take a photo</string>
+    <string name="gallery_filter_all">All</string>
+    <string name="gallery_filter_favorites">Favourites</string>
+    <string name="gallery_filter_edited">Edited</string>
+    <string name="gallery_filter_raw">RAW</string>
+
+    <!-- Photo detail -->
+    <string name="photo_missing">Photo not found</string>
+    <string name="photo_share_dng">Share DNG file</string>
+    <string name="photo_rating">Rating</string>
+    <string name="photo_section_capture">Capture</string>
+    <string name="photo_section_meta">Location &amp; author</string>
+    <string name="photo_section_files">Files</string>
+    <string name="photo_date">Date</string>
+    <string name="photo_size">Size</string>
+    <string name="photo_aperture">Aperture</string>
+    <string name="photo_focal_length">Focal length</string>
+    <string name="photo_mode">Mode</string>
+    <string name="photo_location">Coordinates</string>
+    <string name="photo_altitude">Altitude</string>
+    <string name="photo_device">Device</string>
+    <string name="photo_camera_id">Camera</string>
+    <string name="photo_edit_author">Edit author</string>
+    <string name="photo_edit_notes">Notes</string>
+    <string name="photo_notes">Notes</string>
+    <string name="photo_delete_title">Delete photo?</string>
+    <string name="photo_delete_body">The RAW file, the JPEG, the sidecar and every export of this photo will be removed from the app.</string>
+
+    <!-- Settings -->
+    <string name="settings_section_appearance">Appearance</string>
+    <string name="settings_section_author">Author</string>
+    <string name="settings_section_capture">Capture</string>
+    <string name="settings_section_storage">Storage</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="settings_amoled">Pure black dark theme</string>
+    <string name="settings_amoled_hint">True black backgrounds for OLED screens</string>
+    <string name="settings_accent">Accent colour</string>
+    <string name="settings_dynamic_color">Use wallpaper colours</string>
+    <string name="settings_dynamic_color_hint">Material You dynamic colour (Android 12+)</string>
+    <string name="settings_font_size">Text size</string>
+    <string name="font_small">Small</string>
+    <string name="font_normal">Normal</string>
+    <string name="font_large">Large</string>
+    <string name="font_extra_large">Larger</string>
+    <string name="settings_author">Author</string>
+    <string name="settings_copyright">Copyright</string>
+    <string name="settings_author_hint">Written into every DNG, JPEG, XMP sidecar and export.</string>
+    <string name="settings_format">Capture format</string>
+    <string name="format_raw_jpeg">RAW + JPEG</string>
+    <string name="format_raw">RAW</string>
+    <string name="format_jpeg">JPEG</string>
+    <string name="settings_jpeg_quality">JPEG quality</string>
+    <string name="settings_location">Save location</string>
+    <string name="settings_location_hint">GPS coordinates are stored in the database, DNG, JPEG and XMP</string>
+    <string name="settings_grid">Grid</string>
+    <string name="grid_none">Off</string>
+    <string name="grid_thirds">Thirds</string>
+    <string name="grid_golden">Golden</string>
+    <string name="grid_square">Square</string>
+    <string name="settings_level">Spirit level</string>
+    <string name="settings_histogram">Live histogram</string>
+    <string name="settings_histogram_hint">Shown when the camera supports an extra analysis stream</string>
+    <string name="settings_shutter_sound">Shutter sound</string>
+    <string name="settings_haptics">Haptic feedback</string>
+    <string name="settings_volume_shutter">Volume keys take a photo</string>
+    <string name="settings_keep_screen_on">Keep screen on</string>
+    <string name="settings_storage_path">App folder</string>
+    <string name="settings_storage_photos">Photos</string>
+    <string name="settings_storage_used">Used space</string>
+    <string name="settings_storage_free">%1$s free</string>
+    <string name="settings_storage_db">Database</string>
+    <string name="settings_version">Version %1$s</string>
+    <string name="settings_licenses">Open-source licences</string>
+</resources>
