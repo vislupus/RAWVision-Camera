@@ -58,9 +58,9 @@ Bulgarian UI.
    browser) the first time.
 3. Grant the camera permission when asked. Location is optional and is only used for geotagging.
 
-Release APKs attached to GitHub releases are signed with the project's release key when the
-repository owner configured one, otherwise with a debug key (see *Releasing* below). An APK signed
-with a different key cannot update an existing install; uninstall the old one first.
+Release APKs are signed with the project's shared debug key (`debug.keystore` in the repository),
+so every release can update the previous one. Builds you make yourself from this source use the
+same key. An APK signed with a different key cannot update an existing install.
 
 ## Where the files are
 
@@ -116,23 +116,20 @@ Versions are pinned in `gradle/libs.versions.toml` (AGP 8.11, Kotlin 2.2, Compos
 
 ## Releasing
 
-1. Create a release keystore once and keep it safe:
+1. Bump `versionCode` and `versionName` in `app/build.gradle.kts` and add a CHANGELOG entry.
+2. Push a tag:
    ```bash
-   keytool -genkeypair -v -keystore rawvision.jks -alias rawvision -keyalg RSA -keysize 2048 -validity 10000
+   git tag v1.0.1
+   git push origin v1.0.1
    ```
-2. Locally: copy `keystore.properties.example` to `keystore.properties`, fill it in, run
-   `./gradlew assembleRelease`. Both files are git-ignored. Without them the release build is
-   signed with the debug key, which is fine for your own phone but not for distribution.
-3. On GitHub: add the repository secrets `KEYSTORE_BASE64` (`base64 -w0 rawvision.jks`),
-   `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`. Then push a tag:
-   ```bash
-   git tag v1.0.0
-   git push origin v1.0.0
-   ```
-   The *Release* workflow builds the APK and attaches it to a GitHub Release for that tag.
-   Every push and pull request also runs the *Build* workflow as a smoke test.
+   The *Release* workflow builds `RAWVision-Camera-v1.0.1.apk` and attaches it to a GitHub
+   Release for that tag. Every push and pull request also runs the *Build* workflow.
 
-Bump `versionCode` and `versionName` in `app/build.gradle.kts` for each release.
+APKs are signed with the shared `debug.keystore` from the repository (password `android`). If you
+ever want a private key instead, copy `keystore.properties.example` to `keystore.properties`
+locally, or add the `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`
+secrets on GitHub; the build picks it up automatically. Switching keys breaks updates for
+existing installs.
 
 ## Device notes
 

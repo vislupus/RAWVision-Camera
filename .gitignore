@@ -17,7 +17,8 @@ captures/
 *.apk
 *.aab
 
-# Signing
+# Signing (the shared debug.keystore is intentionally committed)
 keystore.properties
 *.jks
 *.keystore
+!debug.keystore
