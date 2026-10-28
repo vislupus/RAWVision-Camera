@@ -19,6 +19,14 @@ android {
     compileSdk = 36
 
     signingConfigs {
+        // Fixed debug key committed to the repo so local builds and CI releases share one
+        // signature and users can update from one release to the next.
+        getByName("debug") {
+            storeFile = rootProject.file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
         if (keystoreProps.isNotEmpty()) {
             create("release") {
                 storeFile = rootProject.file(keystoreProps.getProperty("storeFile"))
