@@ -43,8 +43,12 @@ android {
     }
 }
 
+// No toolchain: compile with whatever JDK runs Gradle (Android Studio's JBR 21 is fine)
+// and only target Java 17 bytecode.
 kotlin {
-    jvmToolchain(17)
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
 }
 
 dependencies {
