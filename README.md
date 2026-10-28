@@ -1,71 +1,103 @@
 # RAWVision Camera
 
-A RAW camera and non-destructive editor for Android, written in **Kotlin + Jetpack Compose**.
-It shoots DNG with full manual control, keeps every file inside its own private folder, stores
-all metadata in a local SQLite database, and never modifies an original.
+A RAW camera and non-destructive photo editor for Android, built with **Kotlin** and
+**Jetpack Compose**. Shoot DNG with full manual control, edit without ever touching the original,
+and keep everything (files and metadata) in the app's own folder and SQLite database.
 
-> Status: 1.0.0. Tested on Xiaomi Redmi Note 8 Pro (Android 11). Needs a phone with Android 9+
-> whose camera exposes the Camera2 `RAW` capability (most phones from 2018 onwards; the app
-> falls back to JPEG on lenses that cannot produce DNG).
+- Android 9 (API 28) or newer
+- RAW needs a camera that exposes the Camera2 `RAW` capability (most phones since 2018); lenses
+  that cannot produce DNG fall back to JPEG automatically
+- No network permission, no accounts, no analytics
+
+**Contents:** [Features](#features) · [Install](#install) · [Using the app](#using-the-app) ·
+[Where the files are](#where-the-files-are) · [Build from source](#build-from-source) ·
+[Releasing](#releasing) · [Device notes](#device-notes) · [Reporting problems](#reporting-problems) ·
+[License](#license)
 
 ## Features
 
-**Shooting**
-- RAW (DNG) + JPEG, RAW only, or JPEG only
-- ISO and shutter speed independently automatic or manual (the app meters the scene itself when
-  only one of them is manual, something the stock camera stack cannot do)
+### Shooting
+- **RAW (DNG) + JPEG**, RAW only, or JPEG only
+- **ISO and shutter speed independently automatic or manual.** When only one of them is manual
+  the app meters the scene itself through a small analysis stream, which the standard Camera2
+  auto-exposure cannot do.
 - Autofocus with tap-to-focus, manual focus slider (macro ↔ ∞), AE lock
 - White balance presets and manual Kelvin + tint, exposure compensation, flash / torch, zoom,
   self-timer, lens switching on multi-camera phones
-- Live histogram, spirit level, rule-of-thirds / golden / square grids, volume-key shutter
-- Autofocus lock and AE pre-capture before every shot in auto mode
+- Live histogram, spirit level, rule-of-thirds / golden / square grids, volume keys as shutter
+- In auto mode every shot is preceded by an autofocus lock and an AE pre-capture, like a dedicated
+  camera's half-press
 
-**Metadata** (kept in the database, in the DNG/JPEG EXIF and in an XMP sidecar next to each shot)
-- GPS position and altitude (optional), date, device, lens, aperture, focal length, every exposure
-  parameter, author name and copyright
+### Metadata
+Stored in the database, written into the DNG and JPEG (EXIF) and into an XMP sidecar next to
+each capture:
+- GPS position and altitude (optional), date and time, device, lens, aperture, focal length
+- Every exposure parameter used for the shot (ISO, shutter, EV, white balance, flash, zoom, mode)
+- Author name and copyright
 
-**Non-destructive editing**
-- Exposure, contrast, highlights, shadows, whites, blacks
-- Temperature, tint, saturation, vibrance
-- Sharpness, clarity, dehaze, vignette
-- Rotate, flip, straighten with auto-crop, aspect-ratio crop presets
+### Non-destructive editing
+- Light: exposure, contrast, highlights, shadows, whites, blacks
+- Colour: temperature, tint, saturation, vibrance
+- Detail: sharpness, clarity, dehaze
+- Effects: vignette
+- Geometry: rotate, flip, straighten with automatic crop, aspect-ratio crop presets
 - Undo / redo, press-and-hold to compare with the original, version history with restore,
   one-tap reset to the untouched original
-- Export to JPEG with EXIF copied (GPS, author, copyright, camera data)
+- The recipe is stored as data; the DNG/JPEG on disk is never modified
+- Export to JPEG with EXIF carried over (GPS, author, copyright, camera data)
 
-**Library**
-- Grid gallery with filters (all / favourites / edited / RAW), rating, notes
-- Photo details with every capture parameter and the list of files
-- "Exported files" screen with share, save to device and delete
+### Library
+- Gallery grid with filters (all / favourites / edited / RAW), rating and notes per photo
+- Photo details with every capture parameter and the list of files and sizes
+- *Exported files* screen with share, save to device and delete
 - Share any JPEG export or the original DNG through the Android share sheet
-- Save to device: copies files into `Pictures/RAWVision` so other apps can see them
-- Optional automatic copy of every capture into `Pictures/RAWVision`
+- *Save to device* copies a file into `Pictures/RAWVision` so the system gallery can see it
+- Optional automatic copy of every DNG and JPEG into `Pictures/RAWVision`
 
-**Settings**
-- Theme: system / light / dark, pure-black OLED option
+### Settings
+- Theme: system / light / dark, plus a pure-black option for OLED screens
 - Accent colour (10 presets) or Material You dynamic colour (Android 12+)
 - Text size, author / copyright, capture format, JPEG quality, grid, level, histogram,
   shutter sound, haptics, volume-key shutter, keep screen on
-- Storage overview and a camera diagnostics page (what each lens reports)
+- Storage overview and a *Camera diagnostics* page that shows what each lens reports
 
-**Design**: Material 3, bundled Roboto font, [Lucide](https://lucide.dev) icons, English and
-Bulgarian UI.
+### Design
+Material 3, bundled Roboto font, [Lucide](https://lucide.dev) icons. UI in English and Bulgarian.
 
 ## Install
 
-1. Download `app-release.apk` from the [Releases](../../releases) page.
-2. Open it on the phone. Android will ask to allow installs from that app (file manager or
-   browser) the first time.
-3. Grant the camera permission when asked. Location is optional and is only used for geotagging.
+1. Download `RAWVision-Camera-vX.Y.Z.apk` from the [Releases](../../releases) page.
+2. Open the file on the phone. The first time, Android asks to allow installs from the app you
+   opened it with (file manager or browser).
+3. Start RAWVision and grant the camera permission. Location is optional; it is only used to
+   geotag your photos and can be turned off in Settings.
 
-Release APKs are signed with the project's shared debug key (`debug.keystore` in the repository),
-so every release can update the previous one. Builds you make yourself from this source use the
-same key. An APK signed with a different key cannot update an existing install.
+All releases are signed with the same key, so each new version updates the previous one in place.
+Builds you make yourself from this repository use that key too.
+
+## Using the app
+
+**Viewfinder.** The strip under the preview shows ISO, shutter (S), exposure compensation (EV),
+white balance (WB), focus (AF/MF) and zoom. An **A** next to a value means it is automatic. Tap a
+value to open its control; use the **AUTO** chip in the control to hand it back to the camera.
+The round button on the right shows the current mode (`AUTO`, `P`, `S`, `ISO`, `M`); tapping it
+returns everything to automatic.
+
+- Tap the preview to focus and meter on a point; tap again elsewhere to move it.
+- Pinch to zoom, double-tap to reset zoom.
+- The icons over the preview are flash, timer, grid, GPS status, lens picker (when the phone has
+  several lenses), front/back switch and Settings.
+- The thumbnail at the bottom left opens the gallery.
+
+**Editing.** Open a photo and tap **Edit**. Drag sliders, tap a value to reset it, press and hold
+the image to see the original. Edits save automatically; the history (clock-arrow icon) keeps
+every saved version and the original. The download icon renders the edit and stores it in
+`Pictures/RAWVision`; the share icon renders it and opens the share sheet.
 
 ## Where the files are
 
-Everything lives in the app's private folder (`Android/data` is **not** used; this is the internal
-`files/` directory that only the app can read):
+Everything lives in the app's private internal storage, which other apps and file managers
+cannot read:
 
 ```
 files/
@@ -77,79 +109,85 @@ files/
   exports/RV_*_edit_*.jpg  rendered edits
 ```
 
-Nothing is written outside this folder unless you use *Share*, *Save to device* or enable
-*Copy to phone gallery* in Settings. Uninstalling the app deletes the folder.
+Files leave this folder only when you use *Share*, *Save to device* or enable *Copy to phone
+gallery* in Settings. Uninstalling the app deletes the folder, so export or copy what you want to
+keep first.
 
 ## Build from source
 
-Requirements: Android Studio Narwhal (2025.1.1) or newer with its bundled JDK, or any JDK 17+ on
-the command line. The Gradle wrapper downloads Gradle 8.13 itself.
+Requirements: Android Studio Narwhal (2025.1.1) or newer, or any JDK 17+ on the command line.
+The Gradle wrapper downloads Gradle 8.13 by itself; Android Studio installs the SDK.
 
 ```bash
 git clone https://github.com/vislupus/RAWVision-Camera.git
 cd RAWVision-Camera
-./gradlew installDebug          # build and install on a connected phone (Windows: gradlew.bat)
-./gradlew assembleRelease       # app/build/outputs/apk/release/app-release.apk
+./gradlew installDebug        # build and install on a connected phone (Windows: gradlew.bat)
+./gradlew assembleRelease     # app/build/outputs/apk/release/app-release.apk
 ```
 
 Or open the folder in Android Studio and press **Run**. Compose *Live Edit*
-(`Settings → Editor → Live Edit`) applies UI changes to the phone without restarting; *Apply
-Changes* (`Ctrl+F10`) covers the rest.
+(`Settings → Editor → Live Edit`) pushes UI changes to the phone without restarting; *Apply
+Changes* (`Ctrl+F10`) covers changes outside Compose.
 
-No Android SDK path is needed beyond what Android Studio writes to `local.properties`. The project
-uses no code generators (no KSP/kapt) and no third-party runtime libraries besides AndroidX.
+The project has no code generators (no KSP/kapt) and no third-party runtime libraries besides
+AndroidX. Versions are pinned in `gradle/libs.versions.toml` (AGP 8.11, Kotlin 2.2,
+Compose BOM 2025.06).
 
 ### Project layout
 
 ```
 app/src/main/java/com/rawvision/camera/
-  camera/    Camera2 controller, capabilities, parameters, metering, DNG/JPEG saver, sensors, viewfinder UI
+  camera/    Camera2 controller, lens capabilities, shooting parameters, metering loop,
+             DNG/JPEG/XMP writer, sensors (GPS, level, rotation), viewfinder UI
   editor/    CPU image pipeline, exporter, editor screen
   gallery/   gallery, photo details, exported files
-  settings/  settings and diagnostics
-  data/      SQLite (schema + DAOs), repositories, models, sandbox storage
-  ui/        theme (Roboto, colour schemes from a seed, Lucide icons), shared components, navigation
-  util/      image helpers, formatters, thumbnail cache, save-to-device
+  settings/  settings and camera diagnostics
+  data/      SQLite schema and DAOs, repositories, models, sandbox storage layout
+  ui/        theme (Roboto, colour schemes derived from a seed, Lucide icons), shared components,
+             navigation
+  util/      image decoding helpers, formatters, thumbnail cache, save-to-device
 ```
-
-Versions are pinned in `gradle/libs.versions.toml` (AGP 8.11, Kotlin 2.2, Compose BOM 2025.06).
 
 ## Releasing
 
-1. Bump `versionCode` and `versionName` in `app/build.gradle.kts` and add a CHANGELOG entry.
-2. Push a tag:
+1. Bump `versionCode` and `versionName` in `app/build.gradle.kts` and add an entry to
+   `CHANGELOG.md`.
+2. Tag and push:
    ```bash
    git tag v1.0.1
    git push origin v1.0.1
    ```
    The *Release* workflow builds `RAWVision-Camera-v1.0.1.apk` and attaches it to a GitHub
-   Release for that tag. Every push and pull request also runs the *Build* workflow.
+   Release for that tag. The *Build* workflow compiles a debug APK on every push and pull request.
 
-APKs are signed with the shared `debug.keystore` from the repository (password `android`). If you
-ever want a private key instead, copy `keystore.properties.example` to `keystore.properties`
-locally, or add the `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD`
-secrets on GitHub; the build picks it up automatically. Switching keys breaks updates for
-existing installs.
+Releases are signed with `debug.keystore` from the repository (alias `androiddebugkey`, password
+`android`), so local and CI builds carry the same signature. A private key can be used instead
+by creating `keystore.properties` (see `keystore.properties.example`) or by adding the
+`KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS` and `KEY_PASSWORD` repository secrets.
+Changing the key breaks in-place updates for existing installs.
 
 ## Device notes
 
-- **MIUI / MediaTek phones** return incomplete camera metadata before the camera is opened; the
-  app re-reads it after opening, otherwise DNG creation fails with
-  "Missing metadata fields for tag CalibrationIlluminant1".
-- Some HALs report a minimum focus distance of 0 for lenses that do autofocus; the app also
-  looks at the available AF modes.
-- When a lens really cannot produce a DNG, the shot is kept as JPEG and the reason is stored in
-  the photo's notes. *Settings → Storage → Camera diagnostics* shows what each lens reports;
-  please include it in bug reports.
-- The DNG orientation is stored as a TIFF tag (not by rotating pixels); some viewers ignore it.
+- **MIUI / MediaTek phones** (for example Redmi Note 8 Pro) return incomplete camera metadata
+  before the camera is opened. The app re-reads the metadata after opening; without that, DNG
+  creation fails with "Missing metadata fields for tag CalibrationIlluminant1".
+- Some camera HALs report a minimum focus distance of 0 for lenses that do autofocus. The app
+  also checks the available AF modes before deciding a lens is fixed-focus.
+- If a lens cannot produce a DNG at all, the shot is kept as JPEG and the reason is stored in the
+  photo's notes.
+- DNG orientation is stored as a TIFF tag rather than by rotating pixels, which is standard; a few
+  viewers ignore it.
 
-## Privacy
+## Reporting problems
 
-The app has no network permission. Location is only read when *Save location* is enabled and
-is only written into your own files. Nothing leaves the phone unless you share it.
+Open an issue and include:
+- the phone model and Android version
+- the text from *Settings → Storage → Camera diagnostics* (use its copy button)
+- for a failed shot, the note shown in the photo's details under *Location & author*
 
-## Licence
+## License
 
-The source code is released under the MIT licence (see `LICENSE`).
+Source code: [MIT](LICENSE).
 Third-party assets: [Lucide icons](https://lucide.dev) (ISC, `licenses/LUCIDE_ISC.txt`) and
-[Roboto](https://fonts.google.com/specimen/Roboto) (SIL OFL 1.1, `licenses/ROBOTO_OFL.txt`).
+[Roboto](https://fonts.google.com/specimen/Roboto) (SIL Open Font License 1.1,
+`licenses/ROBOTO_OFL.txt`).
