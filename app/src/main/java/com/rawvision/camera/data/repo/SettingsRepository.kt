@@ -52,6 +52,7 @@ class SettingsRepository(private val db: AppDatabase) {
             volumeShutter = b("volume_shutter", d.volumeShutter),
             mirrorFront = b("mirror_front", d.mirrorFront),
             keepScreenOn = b("keep_screen_on", d.keepScreenOn),
+            copyToGallery = b("copy_to_gallery", d.copyToGallery),
             lastCameraId = s("last_camera_id", d.lastCameraId),
         )
     }
@@ -77,6 +78,7 @@ class SettingsRepository(private val db: AppDatabase) {
                 "volume_shutter" to s.volumeShutter.toString(),
                 "mirror_front" to s.mirrorFront.toString(),
                 "keep_screen_on" to s.keepScreenOn.toString(),
+                "copy_to_gallery" to s.copyToGallery.toString(),
                 "last_camera_id" to s.lastCameraId,
             )
         )

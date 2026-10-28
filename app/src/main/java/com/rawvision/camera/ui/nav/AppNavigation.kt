@@ -16,6 +16,7 @@ import com.rawvision.camera.gallery.GalleryScreen
 import com.rawvision.camera.gallery.ExportsScreen
 import com.rawvision.camera.gallery.GalleryViewModel
 import com.rawvision.camera.gallery.PhotoDetailScreen
+import com.rawvision.camera.settings.DiagnosticsScreen
 import com.rawvision.camera.settings.SettingsScreen
 
 object Routes {
@@ -23,6 +24,7 @@ object Routes {
     const val GALLERY = "gallery"
     const val SETTINGS = "settings"
     const val EXPORTS = "exports"
+    const val DIAGNOSTICS = "diagnostics"
     const val PHOTO = "photo/{id}"
     const val EDITOR = "editor/{id}"
     fun photo(id: Long) = "photo/$id"
@@ -77,7 +79,10 @@ fun AppNavigation(container: AppContainer) {
             EditorScreen(vm = vm, onBack = { nav.popBackStack() })
         }
         composable(Routes.SETTINGS) {
-            SettingsScreen(container = container, onBack = { nav.popBackStack() })
+            SettingsScreen(container = container, onBack = { nav.popBackStack() }, onOpenDiagnostics = { nav.navigate(Routes.DIAGNOSTICS) })
+        }
+        composable(Routes.DIAGNOSTICS) {
+            DiagnosticsScreen(onBack = { nav.popBackStack() })
         }
     }
 }

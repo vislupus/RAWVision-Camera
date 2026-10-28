@@ -79,7 +79,9 @@ class CaptureSaver(private val storage: AppStorage) {
                 } catch (e: Exception) {
                     f.delete()
                     if (jpegFile == null) throw e
-                    rawError = e.message ?: e.javaClass.simpleName
+                    rawError = (e.message ?: e.javaClass.simpleName) +
+                        (if (info.dngMissingKeys.isNotEmpty()) " [missing: ${info.dngMissingKeys.joinToString()}]" else "")
+                    android.util.Log.e("CaptureSaver", "DNG write failed on camera ${info.id}: $rawError", e)
                 }
             }
 

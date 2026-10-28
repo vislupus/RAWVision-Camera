@@ -177,6 +177,11 @@
     <string name="settings_storage_used">Used space</string>
     <string name="settings_storage_free">%1$s free</string>
     <string name="settings_storage_db">Database</string>
+    <string name="settings_copy_gallery">Copy to phone gallery</string>
+    <string name="settings_copy_gallery_hint">Also store each DNG and JPEG in Pictures/RAWVision so other apps can see them</string>
+    <string name="settings_diagnostics">Camera diagnostics</string>
+    <string name="settings_diagnostics_hint">What each lens reports: RAW, calibration data, focus, ranges</string>
+    <string name="diagnostics_copied">Copied to clipboard</string>
     <string name="settings_version">Version %1$s</string>
     <string name="settings_licenses">Open-source licences</string>
 </resources>

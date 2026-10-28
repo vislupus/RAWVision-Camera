@@ -43,8 +43,16 @@ data class CameraInfo(
     val maxAfRegions: Int,
     val maxAeRegions: Int,
     val physicalCameraIds: Set<String>,
+    /** DNG calibration keys this camera does not report (empty = DngCreator should be happy). */
+    val dngMissingKeys: List<String>,
+    val hardwareLevel: Int,
 ) {
-    val hasAutoFocus: Boolean get() = minFocusDistance > 0f
+    /** Some HALs (MediaTek) report a minimum focus distance of 0 on lenses that do autofocus, so trust the AF modes too. */
+    val hasAutoFocus: Boolean
+        get() = minFocusDistance > 0f || afModes.any { it != CameraMetadata.CONTROL_AF_MODE_OFF }
+
+    /** Upper bound (diopters) for the manual focus slider; falls back to 10 (= 10 cm) when the HAL reports 0. */
+    val manualFocusMax: Float get() = if (minFocusDistance > 0f) minFocusDistance else 10f
     val primaryFocalLength: Float? get() = focalLengths.firstOrNull()
     val primaryAperture: Float? get() = apertures.firstOrNull()
     val supportsManualExposure: Boolean get() = supportsManualSensor && isoRange != null && exposureRange != null
@@ -78,18 +86,11 @@ data class CameraInfo(
 
             // DngCreator throws "Missing metadata fields" when a lens advertises RAW but lacks the
             // colour calibration tags (common on secondary ultra-wide / macro modules).
-            val dngReady = listOf(
-                CameraCharacteristics.SENSOR_REFERENCE_ILLUMINANT1,
-                CameraCharacteristics.SENSOR_COLOR_TRANSFORM1,
-                CameraCharacteristics.SENSOR_CALIBRATION_TRANSFORM1,
-                CameraCharacteristics.SENSOR_FORWARD_MATRIX1,
-                CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT,
-                CameraCharacteristics.SENSOR_INFO_WHITE_LEVEL,
-                CameraCharacteristics.SENSOR_BLACK_LEVEL_PATTERN,
-                CameraCharacteristics.SENSOR_INFO_PRE_CORRECTION_ACTIVE_ARRAY_SIZE,
-                CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE,
-            ).all { key -> runCatching { c.get(key) }.getOrNull() != null }
-            val supportsRaw = caps.contains(CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_RAW) && rawSizes.isNotEmpty() && dngReady
+            val dngMissing = DNG_KEYS.filter { (_, key) -> runCatching { c.get(key) }.getOrNull() == null }.map { it.first }
+            // Only the illuminant is a hard requirement we know of; everything else is reported in diagnostics
+            // and handled by the JPEG fallback at save time.
+            val supportsRaw = caps.contains(CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_RAW) && rawSizes.isNotEmpty() &&
+                "ReferenceIlluminant1" !in dngMissing
             val rawSize = rawSizes.maxByOrNull { it.width.toLong() * it.height }
             val jpegSize = jpegSizes.maxByOrNull { it.width.toLong() * it.height } ?: Size(1920, 1080)
             val targetAspect = (rawSize ?: jpegSize).let { it.width.toFloat() / it.height }
@@ -140,7 +141,48 @@ data class CameraInfo(
                 maxAfRegions = c.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AF) ?: 0,
                 maxAeRegions = c.get(CameraCharacteristics.CONTROL_MAX_REGIONS_AE) ?: 0,
                 physicalCameraIds = physicalIds,
+                dngMissingKeys = dngMissing,
+                hardwareLevel = c.get(CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL) ?: -1,
             )
+        }
+
+        /** Static keys DngCreator reads; used for the diagnostics screen and the RAW check. */
+        val DNG_KEYS: List<Pair<String, CameraCharacteristics.Key<*>>> = listOf(
+            "ReferenceIlluminant1" to CameraCharacteristics.SENSOR_REFERENCE_ILLUMINANT1,
+            "ReferenceIlluminant2" to CameraCharacteristics.SENSOR_REFERENCE_ILLUMINANT2,
+            "ColorTransform1" to CameraCharacteristics.SENSOR_COLOR_TRANSFORM1,
+            "ColorTransform2" to CameraCharacteristics.SENSOR_COLOR_TRANSFORM2,
+            "CalibrationTransform1" to CameraCharacteristics.SENSOR_CALIBRATION_TRANSFORM1,
+            "CalibrationTransform2" to CameraCharacteristics.SENSOR_CALIBRATION_TRANSFORM2,
+            "ForwardMatrix1" to CameraCharacteristics.SENSOR_FORWARD_MATRIX1,
+            "ForwardMatrix2" to CameraCharacteristics.SENSOR_FORWARD_MATRIX2,
+            "ColorFilterArrangement" to CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT,
+            "WhiteLevel" to CameraCharacteristics.SENSOR_INFO_WHITE_LEVEL,
+            "BlackLevelPattern" to CameraCharacteristics.SENSOR_BLACK_LEVEL_PATTERN,
+            "PreCorrectionActiveArray" to CameraCharacteristics.SENSOR_INFO_PRE_CORRECTION_ACTIVE_ARRAY_SIZE,
+            "PixelArraySize" to CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE,
+        )
+
+        /** Human-readable dump of every camera, for the diagnostics screen. */
+        fun diagnostics(cameras: List<CameraInfo>): String = buildString {
+            appendLine("Device: ${Build.MANUFACTURER} ${Build.MODEL} (Android ${Build.VERSION.RELEASE}, API ${Build.VERSION.SDK_INT})")
+            appendLine()
+            cameras.forEach { cam ->
+                val c = cam.characteristics
+                val caps = c.get(CameraCharacteristics.REQUEST_AVAILABLE_CAPABILITIES)?.joinToString(",").orEmpty()
+                appendLine("Camera ${cam.id}  ${cam.facing}  level=${cam.hardwareLevel}")
+                appendLine("  focal=${cam.focalLengths}  aperture=${cam.apertures}  sensorOrientation=${cam.sensorOrientation}")
+                appendLine("  capabilities=[$caps]")
+                appendLine("  RAW capability=${caps.split(",").contains("3")}  rawSize=${cam.rawSize}  usable=${cam.supportsRaw}")
+                appendLine("  dngMissingKeys=${cam.dngMissingKeys}")
+                appendLine("  manualSensor=${cam.supportsManualSensor}  manualPostProcessing=${cam.supportsManualPostProcessing}")
+                appendLine("  iso=${cam.isoRange}  exposure=${cam.exposureRange}")
+                appendLine("  minFocusDistance=${cam.minFocusDistance}  afModes=${cam.afModes}  hasAutoFocus=${cam.hasAutoFocus}")
+                appendLine("  awbModes=${cam.awbModes}  flash=${cam.hasFlash}  ois=${cam.hasOis}  zoom=${cam.minZoom}..${cam.maxZoom}")
+                appendLine("  jpegSize=${cam.jpegSize}  previewSize=${cam.previewSize}  analysisSize=${cam.analysisSize}")
+                appendLine("  physicalIds=${cam.physicalCameraIds}  activeArray=${cam.activeArray}")
+                appendLine()
+            }
         }
 
         private fun choosePreview(sizes: List<Size>, aspect: Float): Size {
