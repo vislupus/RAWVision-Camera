@@ -279,6 +279,7 @@ class CameraController(context: Context) {
             manager.openCamera(info.id, object : CameraDevice.StateCallback() {
                 override fun onOpened(camera: CameraDevice) {
                     device = camera
+                    refreshInfo()
                     createSession(tryAnalysis = true)
                 }
 
@@ -303,6 +304,17 @@ class CameraController(context: Context) {
         } catch (e: IllegalArgumentException) {
             _status.value = CameraStatus.Error(e.message ?: "Camera unavailable")
         }
+    }
+
+    /**
+     * Re-reads the static metadata once the device is open. Some HALs (MIUI / MediaTek)
+     * return an incomplete CameraCharacteristics before the first open, which makes
+     * DngCreator fail with "Missing metadata fields"; the post-open copy is complete.
+     */
+    private fun refreshInfo() {
+        val current = _info.value ?: return
+        val fresh = runCatching { CameraInfo.from(current.id, manager.getCameraCharacteristics(current.id)) }.getOrNull() ?: return
+        _info.value = fresh
     }
 
     private fun closeCamera(keepSurface: Boolean) {

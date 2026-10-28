@@ -74,12 +74,14 @@ class CaptureSaver(private val storage: AppStorage, private val context: android
                     (context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager)
                         .getCameraCharacteristics(info.id)
                 }.getOrNull()
+                // Freshly read characteristics first: the copy taken at app start can be incomplete on some HALs.
+                val chars = fresh ?: info.characteristics
                 val attempts = listOf(
-                    DngAttempt("full", info.characteristics, thumb, req.location, description),
-                    DngAttempt("fresh characteristics", fresh ?: info.characteristics, thumb, req.location, description),
-                    DngAttempt("no thumbnail", info.characteristics, null, req.location, description),
-                    DngAttempt("no location", info.characteristics, null, null, description),
-                    DngAttempt("no description", info.characteristics, null, null, ""),
+                    DngAttempt("full", chars, thumb, req.location, description),
+                    DngAttempt("cached characteristics", info.characteristics, thumb, req.location, description),
+                    DngAttempt("no thumbnail", chars, null, req.location, description),
+                    DngAttempt("no location", chars, null, null, description),
+                    DngAttempt("no description", chars, null, null, ""),
                 )
                 val failures = mutableListOf<String>()
                 for (attempt in attempts) {
