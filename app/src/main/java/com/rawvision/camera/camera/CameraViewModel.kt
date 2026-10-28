@@ -35,7 +35,7 @@ enum class ControlPanel { NONE, ISO, SHUTTER, FOCUS, WB, EV, ZOOM }
 class CameraViewModel(private val container: AppContainer) : ViewModel() {
 
     val controller = CameraController(container.appContext)
-    private val saver = CaptureSaver(container.storage)
+    private val saver = CaptureSaver(container.storage, container.appContext)
     val location = LocationTracker(container.appContext)
     val level = LevelSensor(container.appContext)
     val rotation = RotationTracker(container.appContext)
