@@ -28,6 +28,34 @@ object ImageUtils {
         return applyOrientation(bmp, orientation)
     }
 
+    /**
+     * Decodes the best source of a [Photo] (DNG first, then the camera JPEG) and
+     * returns it upright. DNG files written by DngCreator carry the orientation
+     * in a TIFF tag that not every reader honours, so when the EXIF reader
+     * reports nothing we fall back to the orientation stored in the database,
+     * guarded by an aspect-ratio check so an already rotated decode is never
+     * rotated twice.
+     */
+    fun decodePhoto(photo: com.rawvision.camera.data.model.Photo, maxEdge: Int): Bitmap? {
+        val candidates = listOfNotNull(photo.rawPath, photo.jpegPath).map { File(it) }.filter { it.exists() }
+        for (file in candidates) {
+            val bmp = decodeSampled(file, maxEdge, maxEdge, applyExif = false) ?: continue
+            val exif = runCatching {
+                ExifInterface(file.absolutePath).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
+            }.getOrDefault(ExifInterface.ORIENTATION_NORMAL)
+            val isDng = file.extension.equals("dng", ignoreCase = true)
+            val sensorLandscape = photo.width >= photo.height
+            val decodedLandscape = bmp.width >= bmp.height
+            val orientation = when {
+                exif != ExifInterface.ORIENTATION_NORMAL && exif != ExifInterface.ORIENTATION_UNDEFINED -> exif
+                isDng && decodedLandscape == sensorLandscape -> photo.orientation
+                else -> ExifInterface.ORIENTATION_NORMAL
+            }
+            return applyOrientation(bmp, orientation)
+        }
+        return null
+    }
+
     fun sampleSize(width: Int, height: Int, reqWidth: Int, reqHeight: Int): Int {
         var sample = 1
         while (width / (sample * 2) >= reqWidth && height / (sample * 2) >= reqHeight) sample *= 2

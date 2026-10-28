@@ -54,6 +54,7 @@ fun GalleryScreen(
     onBack: () -> Unit,
     onOpenPhoto: (Long) -> Unit,
     onOpenCamera: () -> Unit,
+    onOpenExports: () -> Unit,
 ) {
     val photos by vm.photos.collectAsStateWithLifecycle()
     val filter by vm.filter.collectAsStateWithLifecycle()
@@ -66,6 +67,7 @@ fun GalleryScreen(
                 onBack = onBack,
                 backDescription = stringResource(R.string.action_back),
                 actions = {
+                    IconButton(onClick = onOpenExports) { LucideIcon(Lucide.FolderOpen, stringResource(R.string.nav_exports)) }
                     IconButton(onClick = onOpenCamera) { LucideIcon(Lucide.Camera, stringResource(R.string.nav_camera)) }
                 },
             )

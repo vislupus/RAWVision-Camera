@@ -28,6 +28,19 @@ class ExportDao(private val helper: AppDatabase) {
         }
     }
 
+    /** Every export in the app, newest first, with the base name of its photo. */
+    fun all(): List<Pair<ExportRecord, String>> = helper.readableDatabase.rawQuery(
+        "SELECT e.id, e.photo_id, e.path, e.created_at, e.width, e.height, e.size_bytes, p.base_name " +
+            "FROM exports e JOIN photos p ON p.id = e.photo_id ORDER BY e.created_at DESC",
+        null
+    ).use { c ->
+        buildList {
+            while (c.moveToNext()) add(
+                ExportRecord(c.getLong(0), c.getLong(1), c.getString(2), c.getLong(3), c.getInt(4), c.getInt(5), c.getLong(6)) to c.getString(7)
+            )
+        }
+    }
+
     fun delete(id: Long) {
         helper.writableDatabase.delete("exports", "id = ?", arrayOf(id.toString()))
     }

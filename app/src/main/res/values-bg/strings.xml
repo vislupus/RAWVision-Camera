@@ -6,6 +6,7 @@
     <string name="nav_gallery">Галерия</string>
     <string name="nav_editor">Редактор</string>
     <string name="nav_settings">Настройки</string>
+    <string name="nav_exports">Експортирани файлове</string>
 
     <string name="action_back">Назад</string>
     <string name="action_cancel">Отказ</string>
@@ -19,6 +20,8 @@
     <string name="action_save">Запази</string>
     <string name="action_share">Споделяне</string>
     <string name="action_undo">Отмени</string>
+    <string name="action_save_device">Запази на устройството</string>
+    <string name="saved_to_device">Запазено в Pictures/RAWVision</string>
 
     <string name="permission_camera_title">Необходим е достъп до камерата</string>
     <string name="permission_camera_body">RAWVision използва камерата, за да прави снимки. Местоположението е по избор и служи само за геотагване на снимките.</string>
@@ -93,6 +96,11 @@
 
     <string name="photo_missing">Снимката не е намерена</string>
     <string name="photo_share_dng">Сподели DNG файла</string>
+    <string name="photo_save_dng">Запази DNG на устройството</string>
+    <string name="exports_empty_title">Няма експортирани файлове</string>
+    <string name="exports_empty_body">Тук се показват експортите, направени от редактора или от бутона за споделяне. Те стоят в папката на приложението, докато не ги изтриеш.</string>
+    <string name="exports_delete_title">Да изтрия ли експорта?</string>
+    <string name="exports_delete_body">Файлът ще бъде премахнат от папката на приложението. Копията, вече запазени на устройството, остават.</string>
     <string name="photo_rating">Оценка</string>
     <string name="photo_section_capture">Заснемане</string>
     <string name="photo_section_meta">Местоположение и автор</string>
