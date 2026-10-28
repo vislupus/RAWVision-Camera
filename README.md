@@ -75,6 +75,12 @@ adb shell am start -n com.rawvision.camera.debug/com.rawvision.camera.MainActivi
 adb logcat -s CameraController  # логове на камерата
 ```
 
+`assembleRelease` създава `app/build/outputs/apk/release/app-release.apk`. Без
+`keystore.properties` той се подписва с debug ключа на Android Studio (става за инсталиране на
+собствения телефон, не за Play Store). За истински ключ копирай `keystore.properties.example`
+като `keystore.properties` и го попълни. Телефонът трябва да позволява инсталиране от
+неизвестни източници за приложението, с което отваряш APK файла (файлов мениджър, браузър).
+
 `gradlew` (wrapper) сам сваля Gradle 8.13. Нужен е само `ANDROID_HOME`/`local.properties`,
 който Android Studio създава автоматично при първото отваряне.
 
