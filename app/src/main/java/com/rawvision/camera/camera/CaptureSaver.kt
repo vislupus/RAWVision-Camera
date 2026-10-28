@@ -18,7 +18,7 @@ import java.util.Locale
 import java.util.UUID
 
 /** Turns a [CaptureOutput] into DNG / JPEG / thumbnail / sidecar files and a [Photo] row. */
-class CaptureSaver(private val storage: AppStorage) {
+class CaptureSaver(private val storage: AppStorage, private val context: android.content.Context) {
 
     class SaveRequest(
         val output: CaptureOutput,
@@ -63,25 +63,48 @@ class CaptureSaver(private val storage: AppStorage) {
             var rawFile: File? = null
             out.raw?.let { image ->
                 val f = storage.rawFile(baseName)
-                try {
-                    val creator = DngCreator(info.characteristics, result)
-                    creator.setOrientation(exifOrientation)
-                    req.location?.let { creator.setLocation(it) }
-                    if (description.isNotBlank()) creator.setDescription(description)
-                    thumbBitmap?.let { tb ->
-                        val t = ImageUtils.fitLongEdge(tb, 256)
-                        val argb = if (t.config == Bitmap.Config.ARGB_8888) t else t.copy(Bitmap.Config.ARGB_8888, false)
-                        runCatching { creator.setThumbnail(argb) }
+                val thumb = thumbBitmap?.let { tb ->
+                    val t = ImageUtils.fitLongEdge(tb, 256)
+                    if (t.config == Bitmap.Config.ARGB_8888) t else t.copy(Bitmap.Config.ARGB_8888, false)
+                }
+                // Progressive fallback: some HALs reject the DNG for reasons unrelated to the pixels
+                // (GPS tags, thumbnail, stale characteristics). Try the full write first, then drop
+                // one extra in turn so the RAW data is never lost; the failures are kept in the notes.
+                val fresh = runCatching {
+                    (context.getSystemService(android.content.Context.CAMERA_SERVICE) as android.hardware.camera2.CameraManager)
+                        .getCameraCharacteristics(info.id)
+                }.getOrNull()
+                val attempts = listOf(
+                    DngAttempt("full", info.characteristics, thumb, req.location, description),
+                    DngAttempt("fresh characteristics", fresh ?: info.characteristics, thumb, req.location, description),
+                    DngAttempt("no thumbnail", info.characteristics, null, req.location, description),
+                    DngAttempt("no location", info.characteristics, null, null, description),
+                    DngAttempt("no description", info.characteristics, null, null, ""),
+                )
+                val failures = mutableListOf<String>()
+                for (attempt in attempts) {
+                    try {
+                        val creator = DngCreator(attempt.characteristics, result)
+                        creator.setOrientation(exifOrientation)
+                        attempt.location?.let { creator.setLocation(it) }
+                        if (attempt.description.isNotBlank()) creator.setDescription(attempt.description)
+                        attempt.thumbnail?.let { creator.setThumbnail(it) }
+                        image.planes[0].buffer.rewind()
+                        FileOutputStream(f).use { creator.writeImage(it, image) }
+                        creator.close()
+                        rawFile = f
+                        if (failures.isNotEmpty()) rawError = "DNG written (${attempt.label}) after: " + failures.joinToString(" | ")
+                        break
+                    } catch (e: Exception) {
+                        f.delete()
+                        val msg = "${attempt.label}: ${e.message ?: e.javaClass.simpleName}"
+                        failures += msg
+                        android.util.Log.e("CaptureSaver", "DNG attempt failed on camera ${info.id}: $msg", e)
                     }
-                    FileOutputStream(f).use { creator.writeImage(it, image) }
-                    creator.close()
-                    rawFile = f
-                } catch (e: Exception) {
-                    f.delete()
-                    if (jpegFile == null) throw e
-                    rawError = (e.message ?: e.javaClass.simpleName) +
-                        (if (info.dngMissingKeys.isNotEmpty()) " [missing: ${info.dngMissingKeys.joinToString()}]" else "")
-                    android.util.Log.e("CaptureSaver", "DNG write failed on camera ${info.id}: $rawError", e)
+                }
+                if (rawFile == null) {
+                    if (jpegFile == null) throw IllegalStateException(failures.joinToString(" | "))
+                    rawError = "DNG failed: " + failures.joinToString(" | ")
                 }
             }
 
@@ -132,6 +155,7 @@ class CaptureSaver(private val storage: AppStorage) {
                 gpsTime = req.location?.time,
                 author = req.author.ifBlank { null },
                 copyright = req.copyright.ifBlank { null },
+                notes = rawError ?: "",
                 deviceMake = Build.MANUFACTURER.replaceFirstChar { it.titlecase(Locale.getDefault()) },
                 deviceModel = Build.MODEL,
             )
@@ -141,6 +165,14 @@ class CaptureSaver(private val storage: AppStorage) {
             out.close()
         }
     }
+
+    private class DngAttempt(
+        val label: String,
+        val characteristics: android.hardware.camera2.CameraCharacteristics,
+        val thumbnail: Bitmap?,
+        val location: Location?,
+        val description: String,
+    )
 
     private fun readOrientation(file: File): Int = runCatching {
         ExifInterface(file.absolutePath).getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)

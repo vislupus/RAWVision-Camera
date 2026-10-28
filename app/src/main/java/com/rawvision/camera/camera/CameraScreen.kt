@@ -137,7 +137,7 @@ fun CameraScreen(
             when (event) {
                 is CameraEvent.Shutter -> { flashAlpha = 1f; delay(80); flashAlpha = 0f }
                 is CameraEvent.Saved ->
-                    if (event.rawError != null) snackbar.showSnackbar(rawFailedText)
+                    if (event.rawError != null) snackbar.showSnackbar(rawFailedText + "\n" + event.rawError, duration = androidx.compose.material3.SnackbarDuration.Long)
                     else snackbar.showSnackbar(savedText + " " + event.photo.displayName)
                 is CameraEvent.Error -> snackbar.showSnackbar(captureFailedText + " " + event.message)
             }
