@@ -168,6 +168,11 @@
     <string name="settings_storage_used">Използвано място</string>
     <string name="settings_storage_free">%1$s свободни</string>
     <string name="settings_storage_db">База данни</string>
+    <string name="settings_copy_gallery">Копие в галерията на телефона</string>
+    <string name="settings_copy_gallery_hint">Всеки DNG и JPEG се записва и в Pictures/RAWVision, за да го виждат другите приложения</string>
+    <string name="settings_diagnostics">Диагностика на камерите</string>
+    <string name="settings_diagnostics_hint">Какво докладва всеки обектив: RAW, калибрация, фокус, обхвати</string>
+    <string name="diagnostics_copied">Копирано в клипборда</string>
     <string name="settings_version">Версия %1$s</string>
     <string name="settings_licenses">Лицензи с отворен код</string>
 </resources>

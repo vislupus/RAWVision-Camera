@@ -266,12 +266,12 @@ private fun FocusControl(params: CameraParams, meter: LiveMeter, info: CameraInf
     PanelHeader(stringResource(R.string.camera_focus), Formatters.focusDistance(shown), !manual) {
         vm.setParams { p ->
             if (p.focusMode == FocusMode.MANUAL) p.copy(focusMode = FocusMode.CONTINUOUS)
-            else p.copy(focusMode = FocusMode.MANUAL, focusDistance = (meter.focusDistance ?: 0f).coerceIn(0f, info.minFocusDistance))
+            else p.copy(focusMode = FocusMode.MANUAL, focusDistance = (meter.focusDistance ?: 0f).coerceIn(0f, info.manualFocusMax))
         }
     }
     if (info.hasAutoFocus) {
         // Slider runs from macro (left) to infinity (right).
-        val maxD = info.minFocusDistance
+        val maxD = info.manualFocusMax
         DarkSlider(
             value = maxD - (shown ?: 0f).coerceIn(0f, maxD),
             onValueChange = { v -> vm.setParams { it.copy(focusMode = FocusMode.MANUAL, focusDistance = (maxD - v).coerceIn(0f, maxD)) } },

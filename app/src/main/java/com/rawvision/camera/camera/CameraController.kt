@@ -550,7 +550,7 @@ class CameraController(context: Context) {
             !info.hasAutoFocus -> b.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF)
             p.focusMode == FocusMode.MANUAL -> {
                 b.set(CaptureRequest.CONTROL_AF_MODE, CameraMetadata.CONTROL_AF_MODE_OFF)
-                b.set(CaptureRequest.LENS_FOCUS_DISTANCE, p.focusDistance.coerceIn(0f, info.minFocusDistance))
+                b.set(CaptureRequest.LENS_FOCUS_DISTANCE, p.focusDistance.coerceIn(0f, info.manualFocusMax))
             }
             p.focusMode == FocusMode.LOCKED -> {
                 b.set(CaptureRequest.CONTROL_AF_MODE,

@@ -8,6 +8,8 @@ import com.rawvision.camera.data.AppContainer
 import com.rawvision.camera.data.model.CaptureFormat
 import com.rawvision.camera.data.model.LensFacing
 import com.rawvision.camera.data.model.Photo
+import com.rawvision.camera.util.DeviceSaver
+import java.io.File
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -217,6 +219,12 @@ class CameraViewModel(private val container: AppContainer) : ViewModel() {
                 val stored = container.photos.insert(saved.photo)
                 _lastPhoto.value = stored
                 _events.tryEmit(CameraEvent.Saved(stored, saved.rawError))
+                if (s.copyToGallery) {
+                    runCatching {
+                        stored.jpegPath?.let { DeviceSaver.save(container.appContext, File(it), "image/jpeg") }
+                        stored.rawPath?.let { DeviceSaver.save(container.appContext, File(it), "image/x-adobe-dng") }
+                    }.onFailure { _events.tryEmit(CameraEvent.Error(it.message ?: it.javaClass.simpleName)) }
+                }
             } catch (e: Exception) {
                 _events.tryEmit(CameraEvent.Error(e.message ?: e.javaClass.simpleName))
             } finally {

@@ -40,5 +40,6 @@ data class AppSettings(
     val volumeShutter: Boolean = true,
     val mirrorFront: Boolean = true,
     val keepScreenOn: Boolean = true,
+    val copyToGallery: Boolean = false,
     val lastCameraId: String = "",
 )

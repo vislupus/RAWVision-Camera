@@ -63,7 +63,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @Composable
-fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
+fun SettingsScreen(container: AppContainer, onBack: () -> Unit, onOpenDiagnostics: () -> Unit = {}) {
     val settings by container.settings.settings.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     fun update(transform: (AppSettings) -> AppSettings) {
@@ -230,6 +230,8 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                 SwitchRow(Lucide.Bolt, stringResource(R.string.settings_volume_shutter), null, settings.volumeShutter) { v -> update { it.copy(volumeShutter = v) } }
                 RowDivider()
                 SwitchRow(Lucide.Eye, stringResource(R.string.settings_keep_screen_on), null, settings.keepScreenOn) { v -> update { it.copy(keepScreenOn = v) } }
+                RowDivider()
+                SwitchRow(Lucide.Images, stringResource(R.string.settings_copy_gallery), stringResource(R.string.settings_copy_gallery_hint), settings.copyToGallery) { v -> update { it.copy(copyToGallery = v) } }
             }
 
             // ---- Storage ----
@@ -242,6 +244,8 @@ fun SettingsScreen(container: AppContainer, onBack: () -> Unit) {
                 SettingRow(Lucide.HardDrive, stringResource(R.string.settings_storage_used), Formatters.bytes(usedBytes) + "  ·  " + stringResource(R.string.settings_storage_free, Formatters.bytes(freeBytes)))
                 RowDivider()
                 SettingRow(Lucide.Database, stringResource(R.string.settings_storage_db), container.storage.databaseFile.name)
+                RowDivider()
+                SettingRow(Lucide.Cpu, stringResource(R.string.settings_diagnostics), stringResource(R.string.settings_diagnostics_hint), onClick = onOpenDiagnostics)
             }
 
             // ---- About ----
