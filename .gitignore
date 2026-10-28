@@ -16,3 +16,8 @@ captures/
 *.log
 *.apk
 *.aab
+
+# Signing
+keystore.properties
+*.jks
+*.keystore

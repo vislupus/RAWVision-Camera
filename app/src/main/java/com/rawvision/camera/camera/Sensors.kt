@@ -31,6 +31,7 @@ class LocationTracker(private val context: Context) {
     private val listener = object : LocationListener {
         override fun onLocationChanged(location: Location) { _location.value = pickBetter(_location.value, location) }
         @Deprecated("Deprecated in Java")
+        @Suppress("DEPRECATION")
         override fun onStatusChanged(provider: String?, status: Int, extras: android.os.Bundle?) = Unit
         override fun onProviderEnabled(provider: String) = Unit
         override fun onProviderDisabled(provider: String) = Unit
