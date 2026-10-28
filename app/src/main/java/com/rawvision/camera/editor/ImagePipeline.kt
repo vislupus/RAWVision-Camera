@@ -64,11 +64,11 @@ object ImagePipeline {
         init {
             val t = p.temperature / 100f
             val ti = p.tint / 100f
-            var r = 1f + t * 0.35f
-            var b = 1f - t * 0.35f
-            var g = 1f - ti * 0.18f
-            r *= 1f + ti * 0.06f
-            b *= 1f + ti * 0.06f
+            var r = 1f + t * 0.6f
+            var b = 1f - t * 0.6f
+            var g = 1f - ti * 0.3f
+            r *= 1f + ti * 0.1f
+            b *= 1f + ti * 0.1f
             // Keep overall brightness roughly constant.
             val mean = (r + g + b) / 3f
             gainR = r / mean; gainG = g / mean; gainB = b / mean

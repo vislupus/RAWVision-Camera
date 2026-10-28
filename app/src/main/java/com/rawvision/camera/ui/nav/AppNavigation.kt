@@ -13,6 +13,7 @@ import com.rawvision.camera.data.AppContainer
 import com.rawvision.camera.editor.EditorScreen
 import com.rawvision.camera.editor.EditorViewModel
 import com.rawvision.camera.gallery.GalleryScreen
+import com.rawvision.camera.gallery.ExportsScreen
 import com.rawvision.camera.gallery.GalleryViewModel
 import com.rawvision.camera.gallery.PhotoDetailScreen
 import com.rawvision.camera.settings.SettingsScreen
@@ -21,6 +22,7 @@ object Routes {
     const val CAMERA = "camera"
     const val GALLERY = "gallery"
     const val SETTINGS = "settings"
+    const val EXPORTS = "exports"
     const val PHOTO = "photo/{id}"
     const val EDITOR = "editor/{id}"
     fun photo(id: Long) = "photo/$id"
@@ -48,6 +50,15 @@ fun AppNavigation(container: AppContainer) {
                 onBack = { nav.popBackStack() },
                 onOpenPhoto = { id -> nav.navigate(Routes.photo(id)) },
                 onOpenCamera = { nav.popBackStack(Routes.CAMERA, inclusive = false) },
+                onOpenExports = { nav.navigate(Routes.EXPORTS) },
+            )
+        }
+        composable(Routes.EXPORTS) {
+            val vm: GalleryViewModel = viewModel(factory = GalleryViewModel.Factory(container))
+            ExportsScreen(
+                vm = vm,
+                onBack = { nav.popBackStack() },
+                onOpenPhoto = { id -> nav.navigate(Routes.photo(id)) },
             )
         }
         composable(Routes.PHOTO, arguments = listOf(navArgument("id") { type = NavType.LongType })) { entry ->

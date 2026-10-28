@@ -56,7 +56,9 @@ import com.rawvision.camera.ui.components.LabeledSlider
 import com.rawvision.camera.ui.components.RvTopBar
 import com.rawvision.camera.ui.theme.Lucide
 import com.rawvision.camera.ui.theme.LucideIcon
+import com.rawvision.camera.util.DeviceSaver
 import com.rawvision.camera.util.Formatters
+import kotlinx.coroutines.launch
 import java.util.Locale
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -86,34 +88,46 @@ fun EditorScreen(vm: EditorViewModel, onBack: () -> Unit) {
 
     val savedText = stringResource(R.string.editor_saved)
     val exportedText = stringResource(R.string.editor_exported)
+    val savedToDeviceText = stringResource(R.string.saved_to_device)
     val shareTitle = stringResource(R.string.action_share)
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     LaunchedEffect(Unit) {
         vm.events.collect { e ->
             when (e) {
                 is EditorEvent.Saved -> snackbar.showSnackbar(savedText)
                 is EditorEvent.Error -> snackbar.showSnackbar(e.message)
-                is EditorEvent.Exported -> {
-                    snackbar.showSnackbar(exportedText + " " + e.file.name)
-                    context.startActivity(Intent.createChooser(Exporter.shareIntent(context, e.file), shareTitle))
+                is EditorEvent.Exported -> when (e.action) {
+                    ExportAction.SHARE -> {
+                        context.startActivity(Intent.createChooser(Exporter.shareIntent(context, e.file), shareTitle))
+                    }
+                    ExportAction.SAVE_TO_DEVICE -> scope.launch {
+                        val msg = runCatching { DeviceSaver.save(context, e.file, "image/jpeg") }
+                            .fold({ savedToDeviceText }, { it.message ?: exportedText })
+                        snackbar.showSnackbar(msg)
+                    }
                 }
             }
         }
     }
+    val saveToDevice = rememberSaveToDevice { vm.export(ExportAction.SAVE_TO_DEVICE) }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             RvTopBar(
-                title = photo?.displayName ?: stringResource(R.string.nav_editor),
+                title = "",
                 onBack = leave,
                 backDescription = stringResource(R.string.action_back),
                 actions = {
                     IconButton(onClick = vm::undo, enabled = canUndo) { LucideIcon(Lucide.Undo, stringResource(R.string.action_undo)) }
                     IconButton(onClick = vm::redo, enabled = canRedo) { LucideIcon(Lucide.Redo, stringResource(R.string.action_redo)) }
                     IconButton(onClick = { showHistory = true }) { LucideIcon(Lucide.RotateCcw, stringResource(R.string.editor_history)) }
-                    IconButton(onClick = vm::export, enabled = !exporting && !busy) {
+                    IconButton(onClick = saveToDevice, enabled = !exporting && !busy) {
+                        LucideIcon(Lucide.Download, stringResource(R.string.action_save_device))
+                    }
+                    IconButton(onClick = { vm.export(ExportAction.SHARE) }, enabled = !exporting && !busy) {
                         if (exporting) CircularProgressIndicator(Modifier.width(20.dp).height(20.dp), strokeWidth = 2.dp)
-                        else LucideIcon(Lucide.Share, stringResource(R.string.action_export))
+                        else LucideIcon(Lucide.Share, stringResource(R.string.action_share))
                     }
                     Box {
                         IconButton(onClick = { menu = true }) { LucideIcon(Lucide.MoreVertical, null) }
@@ -245,6 +259,22 @@ fun EditorScreen(vm: EditorViewModel, onBack: () -> Unit) {
                 }
             }
         }
+    }
+}
+
+/**
+ * Returns a click handler that runs [action], asking for the legacy storage
+ * permission first on Android 9 (newer versions need none).
+ */
+@Composable
+fun rememberSaveToDevice(action: () -> Unit): () -> Unit {
+    val context = LocalContext.current
+    val launcher = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
+    ) { granted -> if (granted) action() }
+    return {
+        if (DeviceSaver.needsPermission(context)) launcher.launch(android.Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        else action()
     }
 }
 

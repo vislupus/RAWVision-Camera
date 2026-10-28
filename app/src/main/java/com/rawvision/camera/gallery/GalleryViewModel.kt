@@ -7,6 +7,7 @@ import com.rawvision.camera.data.AppContainer
 import com.rawvision.camera.data.model.ExportRecord
 import com.rawvision.camera.data.model.Photo
 import com.rawvision.camera.editor.Exporter
+import com.rawvision.camera.util.DeviceSaver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +26,9 @@ class GalleryViewModel(val container: AppContainer) : ViewModel() {
 
     private val _exports = MutableStateFlow<List<ExportRecord>>(emptyList())
     val exports: StateFlow<List<ExportRecord>> = _exports.asStateFlow()
+
+    private val _allExports = MutableStateFlow<List<Pair<ExportRecord, String>>>(emptyList())
+    val allExports: StateFlow<List<Pair<ExportRecord, String>>> = _allExports.asStateFlow()
 
     private val _busy = MutableStateFlow(false)
     val busy: StateFlow<Boolean> = _busy.asStateFlow()
@@ -73,11 +77,29 @@ class GalleryViewModel(val container: AppContainer) : ViewModel() {
         }
     }
 
+    fun loadAllExports() {
+        viewModelScope.launch { _allExports.value = container.photos.allExports() }
+    }
+
     fun deleteExport(record: ExportRecord) {
         viewModelScope.launch {
             container.photos.deleteExport(record)
             _exports.value = container.photos.exports(record.photoId)
+            _allExports.value = container.photos.allExports()
         }
+    }
+
+    /** Copies a file (export JPEG or DNG) to the phone's Pictures/RAWVision folder. */
+    fun saveToDevice(file: File, mime: String, successMessage: String) {
+        viewModelScope.launch {
+            _message.value = runCatching { DeviceSaver.save(container.appContext, file, mime) }
+                .fold({ successMessage }, { it.message ?: it.javaClass.simpleName })
+        }
+    }
+
+    /** Renders the current recipe and copies the result to the device gallery. */
+    fun exportToDevice(photo: Photo, successMessage: String) {
+        exportForShare(photo) { file -> saveToDevice(file, "image/jpeg", successMessage) }
     }
 
     /** Renders the photo with its current recipe (or as-is) and hands back the JPEG to share. */

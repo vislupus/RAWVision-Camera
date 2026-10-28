@@ -87,6 +87,8 @@ class PhotoRepository(private val db: AppDatabase, private val storage: AppStora
 
     suspend fun exports(photoId: Long): List<ExportRecord> = withContext(Dispatchers.IO) { db.exports.forPhoto(photoId) }
 
+    suspend fun allExports(): List<Pair<ExportRecord, String>> = withContext(Dispatchers.IO) { db.exports.all() }
+
     suspend fun deleteExport(record: ExportRecord) = withContext(Dispatchers.IO) {
         File(record.path).delete()
         db.exports.delete(record.id)

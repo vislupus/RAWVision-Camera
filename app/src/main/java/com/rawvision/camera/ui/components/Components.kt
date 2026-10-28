@@ -55,7 +55,7 @@ fun RvTopBar(
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     CenterAlignedTopAppBar(
-        title = { Text(title, style = MaterialTheme.typography.titleLarge) },
+        title = { Text(title, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
         navigationIcon = {
             if (onBack != null) {
                 IconButton(onClick = onBack) { LucideIcon(com.rawvision.camera.ui.theme.Lucide.ArrowLeft, backDescription) }

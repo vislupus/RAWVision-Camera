@@ -47,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.rawvision.camera.R
 import com.rawvision.camera.data.model.Photo
 import com.rawvision.camera.editor.Exporter
+import com.rawvision.camera.editor.rememberSaveToDevice
 import com.rawvision.camera.ui.components.ConfirmDialog
 import com.rawvision.camera.ui.components.InfoRow
 import com.rawvision.camera.ui.components.RvTopBar
@@ -80,6 +81,11 @@ fun PhotoDetailScreen(
         message?.let { snackbar.showSnackbar(it); vm.consumeMessage() }
     }
     val shareTitle = stringResource(R.string.action_share)
+    val savedToDevice = stringResource(R.string.saved_to_device)
+    val saveJpegToDevice = rememberSaveToDevice { photo?.let { vm.exportToDevice(it, savedToDevice) } }
+    val saveDngToDevice = rememberSaveToDevice {
+        photo?.rawPath?.let { vm.saveToDevice(File(it), "image/x-adobe-dng", savedToDevice) }
+    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -156,16 +162,29 @@ fun PhotoDetailScreen(
                     Text(stringResource(R.string.action_share))
                 }
             }
-            if (photo.rawPath != null) {
-                TextButton(
-                    onClick = {
-                        context.startActivity(Intent.createChooser(Exporter.shareIntent(context, File(photo.rawPath), "image/x-adobe-dng"), shareTitle))
-                    },
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                ) {
-                    LucideIcon(Lucide.Film, null, size = 18.dp)
+            Row(Modifier.padding(horizontal = 8.dp)) {
+                TextButton(onClick = saveJpegToDevice, enabled = !busy) {
+                    LucideIcon(Lucide.Download, null, size = 18.dp)
                     Spacer(Modifier.width(8.dp))
-                    Text(stringResource(R.string.photo_share_dng))
+                    Text(stringResource(R.string.action_save_device))
+                }
+            }
+            if (photo.rawPath != null) {
+                Row(Modifier.padding(horizontal = 8.dp)) {
+                    TextButton(
+                        onClick = {
+                            context.startActivity(Intent.createChooser(Exporter.shareIntent(context, File(photo.rawPath), "image/x-adobe-dng"), shareTitle))
+                        },
+                    ) {
+                        LucideIcon(Lucide.Film, null, size = 18.dp)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.photo_share_dng))
+                    }
+                    TextButton(onClick = saveDngToDevice) {
+                        LucideIcon(Lucide.Download, null, size = 18.dp)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.photo_save_dng))
+                    }
                 }
             }
 
@@ -231,6 +250,9 @@ fun PhotoDetailScreen(
                         }
                         IconButton(onClick = { context.startActivity(Intent.createChooser(Exporter.shareIntent(context, File(e.path)), shareTitle)) }) {
                             LucideIcon(Lucide.Share, stringResource(R.string.action_share), size = 18.dp)
+                        }
+                        IconButton(onClick = { vm.saveToDevice(File(e.path), "image/jpeg", savedToDevice) }) {
+                            LucideIcon(Lucide.Download, stringResource(R.string.action_save_device), size = 18.dp)
                         }
                         IconButton(onClick = { vm.deleteExport(e) }) { LucideIcon(Lucide.Trash, stringResource(R.string.action_delete), size = 18.dp) }
                     }

@@ -26,9 +26,7 @@ class Exporter(private val storage: AppStorage, private val repo: PhotoRepositor
 
     suspend fun export(photo: Photo, params: EditParams, quality: Int, maxLongEdge: Int = 6000): Result = withContext(Dispatchers.IO) {
         val sourceFile = File(photo.rawPath ?: photo.jpegPath ?: throw IllegalStateException("Photo has no file"))
-        var decoded = ImageUtils.decodeSampled(sourceFile, maxLongEdge, maxLongEdge)
-        if (decoded == null && photo.jpegPath != null) decoded = ImageUtils.decodeSampled(File(photo.jpegPath), maxLongEdge, maxLongEdge)
-        val base = decoded ?: throw IllegalStateException("Could not decode ${sourceFile.name}")
+        val base = ImageUtils.decodePhoto(photo, maxLongEdge) ?: throw IllegalStateException("Could not decode ${sourceFile.name}")
         val rendered = ImagePipeline.render(base, params)
         if (rendered !== base) base.recycle()
 

@@ -27,8 +27,10 @@ import java.io.File
 
 enum class EditorTab { LIGHT, COLOR, DETAIL, EFFECTS, GEOMETRY }
 
+enum class ExportAction { SHARE, SAVE_TO_DEVICE }
+
 sealed class EditorEvent {
-    data class Exported(val file: File) : EditorEvent()
+    data class Exported(val file: File, val action: ExportAction) : EditorEvent()
     data class Error(val message: String) : EditorEvent()
     data object Saved : EditorEvent()
 }
@@ -115,12 +117,8 @@ class EditorViewModel(private val container: AppContainer, private val photoId: 
     }
 
     private fun loadBase(p: Photo): Bitmap? {
-        val candidates = listOfNotNull(p.rawPath, p.jpegPath).map { File(it) }.filter { it.exists() }
-        for (f in candidates) {
-            val bmp = ImageUtils.decodeSampled(f, PREVIEW_EDGE, PREVIEW_EDGE) ?: continue
-            return ImageUtils.fitLongEdge(bmp, PREVIEW_EDGE)
-        }
-        return null
+        val bmp = ImageUtils.decodePhoto(p, PREVIEW_EDGE) ?: return null
+        return ImageUtils.fitLongEdge(bmp, PREVIEW_EDGE)
     }
 
     fun selectTab(t: EditorTab) { _tab.value = t }
@@ -200,7 +198,7 @@ class EditorViewModel(private val container: AppContainer, private val photoId: 
         }
     }
 
-    fun export() {
+    fun export(action: ExportAction = ExportAction.SHARE) {
         val p = _photo.value ?: return
         if (_exporting.value) return
         viewModelScope.launch {
@@ -208,7 +206,7 @@ class EditorViewModel(private val container: AppContainer, private val photoId: 
             try {
                 container.photos.saveEdit(photoId, _params.value, "export", snapshot = true)
                 val result = exporter.export(p, _params.value, container.settings.current.jpegQuality)
-                _events.tryEmit(EditorEvent.Exported(result.file))
+                _events.tryEmit(EditorEvent.Exported(result.file, action))
             } catch (e: Exception) {
                 _events.tryEmit(EditorEvent.Error(e.message ?: e.javaClass.simpleName))
             } finally {
