@@ -120,12 +120,16 @@ fun CameraScreen(
     val snackbar = remember { SnackbarHostState() }
     var flashAlpha by remember { mutableStateOf(0f) }
     val savedText = stringResource(R.string.camera_saved)
+    val rawFailedText = stringResource(R.string.camera_raw_failed)
+    val captureFailedText = stringResource(R.string.camera_capture_failed)
     LaunchedEffect(Unit) {
         vm.events.collect { event ->
             when (event) {
                 is CameraEvent.Shutter -> { flashAlpha = 1f; delay(80); flashAlpha = 0f }
-                is CameraEvent.Saved -> snackbar.showSnackbar(savedText + " " + event.photo.displayName)
-                is CameraEvent.Error -> snackbar.showSnackbar(event.message)
+                is CameraEvent.Saved ->
+                    if (event.rawError != null) snackbar.showSnackbar(rawFailedText)
+                    else snackbar.showSnackbar(savedText + " " + event.photo.displayName)
+                is CameraEvent.Error -> snackbar.showSnackbar(captureFailedText + " " + event.message)
             }
         }
     }
@@ -496,9 +500,11 @@ private fun ReadoutBar(
         )
         Readout(
             label = "WB",
-            value = if (params.whiteBalance == WhiteBalance.AUTO) Formatters.kelvin(meter.awbKelvin) else Formatters.kelvin(
-                if (params.whiteBalance == WhiteBalance.MANUAL) params.kelvin else params.whiteBalance.kelvin
-            ),
+            value = when (params.whiteBalance) {
+                WhiteBalance.AUTO -> stringResource(R.string.wb_auto)
+                WhiteBalance.MANUAL -> Formatters.kelvin(params.kelvin)
+                else -> Formatters.kelvin(params.whiteBalance.kelvin)
+            },
             auto = params.whiteBalance == WhiteBalance.AUTO,
             selected = active == ControlPanel.WB,
             onClick = { onSelect(ControlPanel.WB) },
