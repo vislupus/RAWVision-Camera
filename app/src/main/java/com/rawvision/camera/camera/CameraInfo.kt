@@ -63,7 +63,7 @@ data class CameraInfo(
             val manager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
             return runCatching { manager.cameraIdList.toList() }.getOrDefault(emptyList())
                 .mapNotNull { id -> runCatching { from(id, manager.getCameraCharacteristics(id)) }.getOrNull() }
-                .sortedWith(compareBy({ it.facing != LensFacing.BACK }, { !it.supportsRaw }, { it.id.toIntOrNull() ?: Int.MAX_VALUE }))
+                .sortedWith(compareBy({ it.facing != LensFacing.BACK }, { !it.supportsRaw }, { !it.hasAutoFocus }, { it.id.toIntOrNull() ?: Int.MAX_VALUE }))
         }
 
         fun from(id: String, c: CameraCharacteristics): CameraInfo {
@@ -76,7 +76,20 @@ data class CameraInfo(
             val previewSizes = map.getOutputSizes(SurfaceHolder::class.java)?.toList().orEmpty()
             val yuvSizes = map.getOutputSizes(ImageFormat.YUV_420_888)?.toList().orEmpty()
 
-            val supportsRaw = caps.contains(CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_RAW) && rawSizes.isNotEmpty()
+            // DngCreator throws "Missing metadata fields" when a lens advertises RAW but lacks the
+            // colour calibration tags (common on secondary ultra-wide / macro modules).
+            val dngReady = listOf(
+                CameraCharacteristics.SENSOR_REFERENCE_ILLUMINANT1,
+                CameraCharacteristics.SENSOR_COLOR_TRANSFORM1,
+                CameraCharacteristics.SENSOR_CALIBRATION_TRANSFORM1,
+                CameraCharacteristics.SENSOR_FORWARD_MATRIX1,
+                CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT,
+                CameraCharacteristics.SENSOR_INFO_WHITE_LEVEL,
+                CameraCharacteristics.SENSOR_BLACK_LEVEL_PATTERN,
+                CameraCharacteristics.SENSOR_INFO_PRE_CORRECTION_ACTIVE_ARRAY_SIZE,
+                CameraCharacteristics.SENSOR_INFO_PIXEL_ARRAY_SIZE,
+            ).all { key -> runCatching { c.get(key) }.getOrNull() != null }
+            val supportsRaw = caps.contains(CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_RAW) && rawSizes.isNotEmpty() && dngReady
             val rawSize = rawSizes.maxByOrNull { it.width.toLong() * it.height }
             val jpegSize = jpegSizes.maxByOrNull { it.width.toLong() * it.height } ?: Size(1920, 1080)
             val targetAspect = (rawSize ?: jpegSize).let { it.width.toFloat() / it.height }

@@ -28,7 +28,10 @@ class CaptureSaver(private val storage: AppStorage) {
         val thumbnailSize: Int = 512,
     )
 
-    suspend fun save(req: SaveRequest): Photo = withContext(Dispatchers.IO) {
+    class SaveResult(val photo: Photo, val rawError: String?)
+
+    suspend fun save(req: SaveRequest): SaveResult = withContext(Dispatchers.IO) {
+        var rawError: String? = null
         val out = req.output
         val info = out.info
         val result = out.result
@@ -60,18 +63,24 @@ class CaptureSaver(private val storage: AppStorage) {
             var rawFile: File? = null
             out.raw?.let { image ->
                 val f = storage.rawFile(baseName)
-                val creator = DngCreator(info.characteristics, result)
-                creator.setOrientation(exifOrientation)
-                req.location?.let { creator.setLocation(it) }
-                if (description.isNotBlank()) creator.setDescription(description)
-                thumbBitmap?.let { tb ->
-                    val t = ImageUtils.fitLongEdge(tb, 256)
-                    val argb = if (t.config == Bitmap.Config.ARGB_8888) t else t.copy(Bitmap.Config.ARGB_8888, false)
-                    runCatching { creator.setThumbnail(argb) }
+                try {
+                    val creator = DngCreator(info.characteristics, result)
+                    creator.setOrientation(exifOrientation)
+                    req.location?.let { creator.setLocation(it) }
+                    if (description.isNotBlank()) creator.setDescription(description)
+                    thumbBitmap?.let { tb ->
+                        val t = ImageUtils.fitLongEdge(tb, 256)
+                        val argb = if (t.config == Bitmap.Config.ARGB_8888) t else t.copy(Bitmap.Config.ARGB_8888, false)
+                        runCatching { creator.setThumbnail(argb) }
+                    }
+                    FileOutputStream(f).use { creator.writeImage(it, image) }
+                    creator.close()
+                    rawFile = f
+                } catch (e: Exception) {
+                    f.delete()
+                    if (jpegFile == null) throw e
+                    rawError = e.message ?: e.javaClass.simpleName
                 }
-                FileOutputStream(f).use { creator.writeImage(it, image) }
-                creator.close()
-                rawFile = f
             }
 
             // ---- Thumbnail (fallback: decode the DNG) ----
@@ -107,7 +116,7 @@ class CaptureSaver(private val storage: AppStorage) {
                 focusDistance = result.get(CaptureResult.LENS_FOCUS_DISTANCE),
                 whiteBalanceMode = p.whiteBalance.name,
                 whiteBalanceKelvin = when (p.whiteBalance) {
-                    WhiteBalance.AUTO -> result.get(CaptureResult.COLOR_CORRECTION_GAINS)?.let { ExposureMath.kelvinFromGains(it) }
+                    WhiteBalance.AUTO -> null
                     WhiteBalance.MANUAL -> p.kelvin
                     else -> p.whiteBalance.kelvin
                 },
@@ -125,7 +134,7 @@ class CaptureSaver(private val storage: AppStorage) {
                 deviceModel = Build.MODEL,
             )
             runCatching { XmpSidecar.write(storage.sidecarFile(baseName), photo, null) }
-            photo
+            SaveResult(photo, rawError)
         } finally {
             out.close()
         }

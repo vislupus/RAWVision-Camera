@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 /** One-off messages shown by the camera screen. */
 sealed class CameraEvent {
-    data class Saved(val photo: Photo) : CameraEvent()
+    data class Saved(val photo: Photo, val rawError: String? = null) : CameraEvent()
     data class Error(val message: String) : CameraEvent()
     data object Shutter : CameraEvent()
 }
@@ -66,7 +66,9 @@ class CameraViewModel(private val container: AppContainer) : ViewModel() {
             val s = settings.value
             controller.captureFormat = s.captureFormat
             val preferred = controller.cameras.firstOrNull { it.id == s.lastCameraId }
+                ?: controller.cameras.firstOrNull { it.facing == LensFacing.BACK && it.supportsRaw && it.hasAutoFocus }
                 ?: controller.cameras.firstOrNull { it.facing == LensFacing.BACK && it.supportsRaw }
+                ?: controller.cameras.firstOrNull { it.facing == LensFacing.BACK && it.hasAutoFocus }
                 ?: controller.cameras.firstOrNull { it.facing == LensFacing.BACK }
                 ?: controller.cameras.firstOrNull()
             preferred?.let { selectCamera(it.id, restorePreset = true) }
@@ -204,7 +206,7 @@ class CameraViewModel(private val container: AppContainer) : ViewModel() {
                 )
                 if (s.shutterSound) sound.play(MediaActionSound.SHUTTER_CLICK)
                 _events.tryEmit(CameraEvent.Shutter)
-                val photo = saver.save(
+                val saved = saver.save(
                     CaptureSaver.SaveRequest(
                         output = output,
                         location = if (s.saveLocation) location.location.value else null,
@@ -212,9 +214,9 @@ class CameraViewModel(private val container: AppContainer) : ViewModel() {
                         copyright = s.copyright,
                     )
                 )
-                val stored = container.photos.insert(photo)
+                val stored = container.photos.insert(saved.photo)
                 _lastPhoto.value = stored
-                _events.tryEmit(CameraEvent.Saved(stored))
+                _events.tryEmit(CameraEvent.Saved(stored, saved.rawError))
             } catch (e: Exception) {
                 _events.tryEmit(CameraEvent.Error(e.message ?: e.javaClass.simpleName))
             } finally {

@@ -40,6 +40,8 @@
     <string name="camera_no_raw">Този обектив не поддържа RAW</string>
     <string name="camera_none">Няма налична камера</string>
     <string name="camera_saved">Запазено</string>
+    <string name="camera_raw_failed">Този обектив не може да записва DNG (липсват калибрационни данни). Записано е само като JPEG.</string>
+    <string name="camera_capture_failed">Снимката не е записана:</string>
 
     <string name="wb_auto">Авто</string>
     <string name="wb_incandescent">Волфрам</string>
