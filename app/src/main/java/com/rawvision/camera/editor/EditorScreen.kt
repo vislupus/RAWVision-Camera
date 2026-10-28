@@ -283,8 +283,8 @@ private fun EditSlider(
     icon: Int,
     vm: EditorViewModel,
     valueText: String = String.format(Locale.US, "%+.0f", value),
-    set: (EditParams, Float) -> EditParams,
     default: Float = 0f,
+    set: (EditParams, Float) -> EditParams,
 ) {
     LabeledSlider(
         label = label,
