@@ -117,6 +117,16 @@ fun CameraScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    // The viewfinder is always dark: use light status-bar icons while it is visible.
+    val view = androidx.compose.ui.platform.LocalView.current
+    DisposableEffect(view) {
+        val window = (view.context as? android.app.Activity)?.window
+        val controller = window?.let { androidx.core.view.WindowCompat.getInsetsController(it, view) }
+        val previous = controller?.isAppearanceLightStatusBars
+        controller?.isAppearanceLightStatusBars = false
+        onDispose { if (previous != null) controller.isAppearanceLightStatusBars = previous }
+    }
+
     val snackbar = remember { SnackbarHostState() }
     var flashAlpha by remember { mutableStateOf(0f) }
     val savedText = stringResource(R.string.camera_saved)
@@ -195,16 +205,7 @@ private fun CameraContent(
     val locationFix by vm.location.location.collectAsStateWithLifecycle()
 
     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding()) {
-        CameraTopBar(
-            vm = vm,
-            info = info,
-            params = params,
-            grid = settings.grid,
-            hasLocation = settings.saveLocation && locationFix != null,
-            onOpenSettings = onOpenSettings,
-        )
-
-        // ---- Viewfinder ----
+        // ---- Viewfinder (controls are drawn on top of it) ----
         Box(
             Modifier
                 .fillMaxWidth()
@@ -223,7 +224,7 @@ private fun CameraContent(
                     if (settings.showLevel) LevelOverlay(roll, Modifier.matchParentSize())
                     FocusRing(focusPoint, meter.isFocused, meter.isFocusing, Modifier.matchParentSize())
                     if (settings.showHistogram && analysis) {
-                        HistogramOverlay(histogram, Modifier.align(Alignment.TopStart).padding(12.dp))
+                        HistogramOverlay(histogram, Modifier.align(Alignment.TopStart).padding(top = 64.dp, start = 12.dp))
                     }
                     if (current.supportsRaw.not()) {
                         Text(
@@ -232,7 +233,7 @@ private fun CameraContent(
                             style = MaterialTheme.typography.labelMedium,
                             modifier = Modifier
                                 .align(Alignment.TopEnd)
-                                .padding(12.dp)
+                                .padding(top = 64.dp, end = 12.dp)
                                 .clip(RoundedCornerShape(6.dp))
                                 .background(Color.Black.copy(alpha = 0.5f))
                                 .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -259,9 +260,22 @@ private fun CameraContent(
                         )
                         else -> Unit
                     }
+                    CameraTopBar(
+                        vm = vm,
+                        info = current,
+                        params = params,
+                        grid = settings.grid,
+                        hasLocation = settings.saveLocation && locationFix != null,
+                        onOpenSettings = onOpenSettings,
+                        modifier = Modifier.align(Alignment.TopCenter),
+                    )
                 }
             } else {
-                Text(stringResource(R.string.camera_none), color = Color.White)
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(stringResource(R.string.camera_none), color = Color.White)
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = onOpenSettings) { Text(stringResource(R.string.nav_settings)) }
+                }
             }
         }
 
@@ -294,7 +308,7 @@ private fun CameraContent(
                     .size(52.dp)
                     .clip(RoundedCornerShape(10.dp))
                     .background(Color.White.copy(alpha = 0.12f))
-                    .clickable { lastPhoto?.let { onOpenPhoto(it.id) } ?: onOpenGallery() },
+                    .clickable(onClick = onOpenGallery),
                 contentAlignment = Alignment.Center,
             ) {
                 val thumbPath = lastPhoto?.thumbPath
@@ -375,11 +389,13 @@ private fun CameraTopBar(
     grid: GridMode,
     hasLocation: Boolean,
     onOpenSettings: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     var lensMenu by remember { mutableStateOf(false) }
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
+            .background(Color.Black.copy(alpha = 0.35f))
             .height(52.dp)
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,

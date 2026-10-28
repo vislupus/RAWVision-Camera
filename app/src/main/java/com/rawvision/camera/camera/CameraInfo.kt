@@ -87,10 +87,10 @@ data class CameraInfo(
             // DngCreator throws "Missing metadata fields" when a lens advertises RAW but lacks the
             // colour calibration tags (common on secondary ultra-wide / macro modules).
             val dngMissing = DNG_KEYS.filter { (_, key) -> runCatching { c.get(key) }.getOrNull() == null }.map { it.first }
-            // Only the illuminant is a hard requirement we know of; everything else is reported in diagnostics
-            // and handled by the JPEG fallback at save time.
-            val supportsRaw = caps.contains(CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_RAW) && rawSizes.isNotEmpty() &&
-                "ReferenceIlluminant1" !in dngMissing
+            // Some HALs (MediaTek) expose the calibration keys with a type the framework cannot read, so
+            // the Java getters return null even though DngCreator works. Trust the capability flag and let
+            // the JPEG fallback at save time handle lenses that really cannot write DNG.
+            val supportsRaw = caps.contains(CameraMetadata.REQUEST_AVAILABLE_CAPABILITIES_RAW) && rawSizes.isNotEmpty()
             val rawSize = rawSizes.maxByOrNull { it.width.toLong() * it.height }
             val jpegSize = jpegSizes.maxByOrNull { it.width.toLong() * it.height } ?: Size(1920, 1080)
             val targetAspect = (rawSize ?: jpegSize).let { it.width.toFloat() / it.height }
